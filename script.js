@@ -29,7 +29,7 @@ function preload() {
         'mario',
         'assets/entities/mario.png',
         {frameWidth: 18, frameHeight: 16}
-    )
+    )    
 }
 
 function create() {
@@ -45,13 +45,48 @@ function create() {
   this.mario = this.add.sprite(50,210,'mario')
    .setOrigin(0,1)
 
+   this.anims.create({
+    key: 'mario-walk',
+    frames: this.anims.generateFrameNumbers(
+        'mario', 
+        {start: 3, end: 1}
+    ),
+    frameRate: 10,  //velocidad a la que se ejecuta la animación
+    repeat: -1,
+    duration: 100
+})
+
+    this.anims.create({
+        key: 'mario-idle',
+        frames: [{key: 'mario', frame: 0}],
+})
+
+    this.anims.create({
+        key: 'mario-jump',
+        frames: [{key: 'mario', frame: 5}],
+})
+
    this.keys = this.input.keyboard.createCursorKeys()
 }
 
 function update() {
     if(this.keys.left.isDown) {
+        this.mario.anims.play('mario-walk', true)
         this.mario.x -= 2
+        //giro de personaje
+        this.mario.flipX = true
     } else if(this.keys.right.isDown) {
+        this.mario.anims.play('mario-walk', true)
         this.mario.x += 2
+        this.mario.flipX = false
+    }else{
+        this.mario.anims.play('mario-idle', true) //si no se presiona ninguna tecla
+        this.mario.anims.stop()
+        this.mario.setFrame(0)
+    }
+
+    if(this.keys.up.isDown) {
+        this.mario.y -= 2 
+        this.mario.anims.play('mario-jump', true)
     }
 }
