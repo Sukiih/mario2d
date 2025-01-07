@@ -5,6 +5,13 @@ const config = {
     height: 244,
     backgroundColor: '#049cd8',  //responde a hexadecimales
     parent: 'game',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: {y: 300},
+            debug: false
+        }
+    },
     scene: {
         preload, //se ejecuta para precargar recursos
         create, // se ejecua cuando el juego comienza
@@ -38,22 +45,35 @@ function create() {
    .setOrigin(0, 0)
    .setScale(0.15)
 
-   this.add.tileSprite(0, config.height - 32, config.width, 32, 'floorbricks')
-   .setOrigin(0, 0)
+   this.floor = this.physics.add.staticGroup()
+
+   this.floor
+   .create(0, config.height - 16, 'floorbricks')
+   .setOrigin(0, 0.5)
+   //sincronizar fisicas
+   .refreshBody()
+
+   this.floor
+   .create(150, config.height - 16, 'floorbricks')
+   .setOrigin(0, 0.5)
+   .refreshBody()
    
+  //this.mario = this.add.sprite(50,210,'mario')
 
-  this.mario = this.add.sprite(50,210,'mario')
+   this.mario = this.physics.add.sprite(50, 100,'mario')
    .setOrigin(0,1)
+   .setGravityY(300)
 
+   this.physics.add.collider(this.mario, this.floor)
+   
    this.anims.create({
     key: 'mario-walk',
     frames: this.anims.generateFrameNumbers(
         'mario', 
         {start: 3, end: 1}
     ),
-    frameRate: 10,  //velocidad a la que se ejecuta la animación
+    frameRate: 12,  //velocidad a la que se ejecuta la animación
     repeat: -1,
-    duration: 100
 })
 
     this.anims.create({
