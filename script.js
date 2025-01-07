@@ -1,3 +1,5 @@
+import { createAnimations } from "./animations.js";
+
 //global Phaser config
 const config = {
     type: Phaser.AUTO,
@@ -63,50 +65,43 @@ function create() {
    this.mario = this.physics.add.sprite(50, 100,'mario')
    .setOrigin(0,1)
    .setGravityY(300)
+   .setCollideWorldBounds(true)
 
+   this.physics.world.setBounds(0, 0, 2000, config.height)
    this.physics.add.collider(this.mario, this.floor)
+
+   this.cameras.main.setBounds(0, 0, 2000, config.height)
+   this.cameras.main.startFollow(this.mario)
    
-   this.anims.create({
-    key: 'mario-walk',
-    frames: this.anims.generateFrameNumbers(
-        'mario', 
-        {start: 3, end: 1}
-    ),
-    frameRate: 12,  //velocidad a la que se ejecuta la animación
-    repeat: -1,
-})
-
-    this.anims.create({
-        key: 'mario-idle',
-        frames: [{key: 'mario', frame: 0}],
-})
-
-    this.anims.create({
-        key: 'mario-jump',
-        frames: [{key: 'mario', frame: 5}],
-})
+   createAnimations(this)
 
    this.keys = this.input.keyboard.createCursorKeys()
 }
 
 function update() {
-    if(this.keys.left.isDown) {
-        this.mario.anims.play('mario-walk', true)
-        this.mario.x -= 2
-        //giro de personaje
-        this.mario.flipX = true
-    } else if(this.keys.right.isDown) {
-        this.mario.anims.play('mario-walk', true)
-        this.mario.x += 2
-        this.mario.flipX = false
-    }else{
-        this.mario.anims.play('mario-idle', true) //si no se presiona ninguna tecla
-        this.mario.anims.stop()
-        this.mario.setFrame(0)
+    if (this.mario.isDead) return
+
+    if (this.keys.left.isDown) {
+        this.mario.setVelocityX(-100);
+        this.mario.anims.play('mario-walk', true);
+        this.mario.flipX = true; // Gira a Mario
+    } else if (this.keys.right.isDown) {
+        this.mario.setVelocityX(100); 
+        this.mario.anims.play('mario-walk', true);
+        this.mario.flipX = false; // 
+    } else {
+        this.mario.setVelocityX(0); // 
+        this.mario.anims.play('mario-idle', true); // Cambia a la animación de inactividad
     }
 
-    if(this.keys.up.isDown) {
-        this.mario.y -= 2 
-        this.mario.anims.play('mario-jump', true)
+    if (this.keys.up.isDown && this.mario.body.touching.down) {
+        this.mario.setVelocityY(-300);
+        this.mario.anims.play('mario-jump', true);
+    }
+
+    if(this.mario.y >= config.height) {
+        this.mario.isDead = true
+        this.mario.anims.play('mario-dead');
+        this.mario.setCollideWorldBounds(false);      
     }
 }
