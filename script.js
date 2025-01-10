@@ -16,7 +16,7 @@ const config = {
     },
     scene: {
         preload, //se ejecuta para precargar recursos
-        create, // se ejecua cuando el juego comienza
+        create, // se ejecuta cuando el juego comienza
         update, // se ejecuta para actualizar el juego
     }
 };
@@ -81,6 +81,35 @@ function create() {
     // Mov teclado
     this.keys = this.input.keyboard.createCursorKeys();
 
+    // Controles táctiles
+    this.leftTouchArea = this.add.zone(0, config.height - 80, config.width / 2, 80).setOrigin(0, 0).setInteractive();
+    this.rightTouchArea = this.add.zone(config.width / 2, config.height - 80, config.width / 2, 80).setOrigin(0, 0).setInteractive();
+    this.jumpTouchArea = this.add.zone(config.width - 60, config.height - 120, 60, 60).setOrigin(0, 0).setInteractive();
+
+    // Detectar toque izquierdo/derecho
+    this.leftTouchArea.on('pointerdown', () => {
+        this.mario.isMovingLeft = true; 
+    });
+    this.rightTouchArea.on('pointerdown', () => {
+        this.mario.isMovingRight = true;
+    });
+
+    // Detener movimiento cuando se deja de tocar
+    this.leftTouchArea.on('pointerup', () => {
+        this.mario.isMovingLeft = false;
+    });
+    this.rightTouchArea.on('pointerup', () => {
+        this.mario.isMovingRight = false;
+    });
+
+    // Control de salto
+    this.jumpTouchArea.on('pointerdown', () => {
+        if (this.mario.body.touching.down) {
+            this.mario.setVelocityY(-300);
+            this.mario.anims.play('mario-jump', true);
+        }
+    });
+
     // muerte de Mario
     this.events.once('mario-dead', () => {
         this.mario.isDead = true;
@@ -89,32 +118,44 @@ function create() {
         this.mario.setVelocity(-350); // brinco al morir
         this.sound.add('gameover', { volume: 0.3 }).play();
 
-        // Reinicia el juego tras 2 segundos
         this.time.delayedCall(2000, () => {
             this.scene.restart();
         });
     });
 }
 
-// Actualización del juego
 function update() {
     if (this.mario.isDead) return;
 
-    // Movimiento izquierda/derecha
+    let moveX = 0;
+
     if (this.keys.left.isDown) {
-        this.mario.setVelocityX(-100);
-        this.mario.anims.play('mario-walk', true);
-        this.mario.flipX = true; // Voltear a Mario
+        moveX = -100;
+        this.mario.flipX = true;
     } else if (this.keys.right.isDown) {
-        this.mario.setVelocityX(100);
-        this.mario.anims.play('mario-walk', true);
+        moveX = 100;
         this.mario.flipX = false;
+    }
+
+    // Movimiento táctil
+    if (this.mario.isMovingLeft) {
+        moveX = -100;
+        this.mario.flipX = true;
+    } else if (this.mario.isMovingRight) {
+        moveX = 100;
+        this.mario.flipX = false;
+    }
+
+    // Aplicar el movimiento
+    this.mario.setVelocityX(moveX);
+
+    if (moveX !== 0) {
+        this.mario.anims.play('mario-walk', true);
     } else {
-        this.mario.setVelocityX(0);
         this.mario.anims.play('mario-idle', true);
     }
 
-    // Salto
+    // Salto con teclado
     if (this.keys.up.isDown && this.mario.body.touching.down) {
         this.mario.setVelocityY(-300);
         this.mario.anims.play('mario-jump', true);
@@ -122,6 +163,6 @@ function update() {
 
     // Detectar muerte
     if (this.mario.y >= config.height) {
-        this.events.emit('mario-dead'); // Activar el evento de muerte
+        this.events.emit('mario-dead');
     }
 }
